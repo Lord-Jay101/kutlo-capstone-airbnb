@@ -57,7 +57,9 @@ const Footer = () => {
               <ul>
                 {column.links.map((link, linkIndex) => (
                   <li key={linkIndex}>
-                    <a href="#">{link}</a>
+                    <button type="button" className="footer-link">
+                      {link}
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -68,9 +70,15 @@ const Footer = () => {
         <div className="footer-bottom">
           <div className="footer-legal">
             <span>© {currentYear} Airbnb, Inc.</span>
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
-            <a href="#">Sitemap</a>
+            <button type="button" className="footer-link">
+              Privacy
+            </button>
+            <button type="button" className="footer-link">
+              Terms
+            </button>
+            <button type="button" className="footer-link">
+              Sitemap
+            </button>
           </div>
           <div className="footer-language">
             <span>English (US)</span>
@@ -80,22 +88,25 @@ const Footer = () => {
                 href="https://facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Facebook"
               >
-                <FaFacebookF />
+                <FaFacebookF aria-hidden="true" />
               </a>
               <a
                 href="https://twitter.com"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Twitter"
               >
-                <FaTwitter />
+                <FaTwitter aria-hidden="true" />
               </a>
               <a
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Instagram"
               >
-                <FaInstagram />
+                <FaInstagram aria-hidden="true" />
               </a>
             </div>
           </div>
@@ -139,14 +150,25 @@ const Footer = () => {
           margin-bottom: 12px;
         }
 
-        .footer-column a {
+        .footer-column a,
+        .footer-link {
           color: #717171;
           text-decoration: none;
           font-size: 14px;
           transition: color 0.2s;
         }
 
-        .footer-column a:hover {
+        .footer-link {
+          background: none;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          text-align: left;
+          font-family: inherit;
+        }
+
+        .footer-column a:hover,
+        .footer-link:hover {
           color: #222222;
           text-decoration: underline;
         }
@@ -166,16 +188,19 @@ const Footer = () => {
         }
 
         .footer-legal span,
-        .footer-legal a {
+        .footer-legal a,
+        .footer-legal .footer-link {
           font-size: 14px;
           color: #717171;
         }
 
-        .footer-legal a {
+        .footer-legal a,
+        .footer-legal .footer-link {
           text-decoration: none;
         }
 
-        .footer-legal a:hover {
+        .footer-legal a:hover,
+        .footer-legal .footer-link:hover {
           text-decoration: underline;
         }
 

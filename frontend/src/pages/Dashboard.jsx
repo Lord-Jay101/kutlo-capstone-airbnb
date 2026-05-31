@@ -98,15 +98,6 @@ const Dashboard = () => {
           <div
             key={listing._id}
             className="card"
-            onClick={() => navigate(`/location/${listing._id}`)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                navigate(`/location/${listing._id}`);
-              }
-            }}
-            role="button"
-            tabIndex={0}
           >
             {/* Image */}
             <img
@@ -160,20 +151,20 @@ const Dashboard = () => {
               <div className="buttons">
                 <button
                   className="edit"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/listings/edit/${listing._id}`);
-                  }}
+                  onClick={() =>
+                    navigate(
+                      `/listings/edit/${listing._id}`
+                    )
+                  }
                 >
                   Edit
                 </button>
 
                 <button
                   className="delete"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(listing._id);
-                  }}
+                  onClick={() =>
+                    handleDelete(listing._id)
+                  }
                 >
                   Delete
                 </button>
@@ -239,20 +230,7 @@ const Dashboard = () => {
           display: flex;
           gap: 15px;
           border-bottom: 1px solid #eee;
-          padding: 12px;
-          margin: 0 -12px;
-          border-radius: 10px;
-          cursor: pointer;
-          transition: background 0.2s ease;
-        }
-
-        .card:hover {
-          background: #fafafa;
-        }
-
-        .card:focus-visible {
-          outline: 2px solid #3b82f6;
-          outline-offset: 2px;
+          padding-bottom: 20px;
         }
 
         .image {

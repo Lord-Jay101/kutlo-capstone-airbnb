@@ -27,14 +27,14 @@ const EditListing = () => {
     bedrooms: 1,
     bathrooms: 1,
     price: "",
-    weeklyDiscount: 0,
-    cleaningFee: 0,
-    serviceFee: 0,
-    occupancyTaxes: 0,
     description: "",
     enhancedCleaning: false,
     selfCheckIn: false,
     bedroomImage: "",
+    weeklyDiscount: 0,
+    cleaningFee: 0,
+    serviceFee: 0,
+    occupancyTaxes: 0,
   });
 
   const [locations, setLocations] = useState([]);
@@ -42,22 +42,24 @@ const EditListing = () => {
   const [amenityInput, setAmenityInput] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [images, setImages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [listingRes, allRes] = await Promise.all([
+        const [listingRes, accommodationsRes] = await Promise.all([
           api.get(`/accommodations/${id}`),
           api.get("/accommodations"),
         ]);
 
         const listing = listingRes.data;
         const uniqueLocations = [
-          ...new Set(allRes.data.map((acc) => acc.location).filter(Boolean)),
+          ...new Set(
+            accommodationsRes.data.map((acc) => acc.location).filter(Boolean)
+          ),
         ];
 
         if (listing.location && !uniqueLocations.includes(listing.location)) {
@@ -76,16 +78,17 @@ const EditListing = () => {
           bedrooms: listing.bedrooms || 1,
           bathrooms: listing.bathrooms || 1,
           price: listing.price ?? "",
-          weeklyDiscount: listing.weeklyDiscount || 0,
-          cleaningFee: listing.cleaningFee || 0,
-          serviceFee: listing.serviceFee || 0,
-          occupancyTaxes: listing.occupancyTaxes || 0,
           description: listing.description || "",
           enhancedCleaning: listing.enhancedCleaning || false,
           selfCheckIn: listing.selfCheckIn || false,
           bedroomImage: listing.bedroomImage || "",
+          weeklyDiscount: listing.weeklyDiscount || 0,
+          cleaningFee: listing.cleaningFee || 0,
+          serviceFee: listing.serviceFee || 0,
+          occupancyTaxes: listing.occupancyTaxes || 0,
         });
       } catch (err) {
+        console.error(err);
         setMessage("Failed to load listing");
         setIsError(true);
       } finally {
@@ -198,7 +201,21 @@ const EditListing = () => {
         navigate("/dashboard");
       }, 1200);
     } catch (err) {
-      setMessage(err.response?.data?.message || "Update failed");
+      console.error(err);
+      const status = err.response?.status;
+      let errorMessage =
+        err.response?.data?.message || "Failed to update listing";
+
+      if (status === 401) {
+        errorMessage = "Please log in as a host to update this listing.";
+      } else if (status === 403) {
+        errorMessage = "You are not authorized to update this listing.";
+      } else if (status === 413) {
+        errorMessage =
+          "Images are too large. Use smaller photos or paste image URLs instead.";
+      }
+
+      setMessage(errorMessage);
       setIsError(true);
     } finally {
       setSaving(false);
@@ -210,7 +227,22 @@ const EditListing = () => {
       <>
         <Header />
         <HostNav />
-        <div className="edit-loading">Loading listing...</div>
+        <div className="edit-page">
+          <p className="loading-text">Loading listing...</p>
+        </div>
+        <style>{`
+          .edit-page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 5px var(--page-padding-x) 2rem;
+          }
+
+          .loading-text {
+            text-align: center;
+            padding: 3rem 0;
+            color: #666;
+          }
+        `}</style>
       </>
     );
   }
@@ -230,6 +262,7 @@ const EditListing = () => {
                 Listing Title
                 <input
                   name="title"
+                  placeholder="Charming Home in Paris"
                   value={form.title}
                   onChange={handleChange}
                   required
@@ -313,26 +346,75 @@ const EditListing = () => {
                 )}
               </div>
 
-              <label className="field-label">
-                Bedroom Photo URL
-                <input
-                  name="bedroomImage"
-                  type="url"
-                  placeholder="URL for Where you'll sleep section"
-                  value={form.bedroomImage}
-                  onChange={handleChange}
-                />
-              </label>
+              <div className="fees-section">
+                <span className="field-label">Fees &amp; discounts</span>
+                <div className="field-row">
+                  <label className="field-label">
+                    Weekly Discount ($)
+                    <input
+                      name="weeklyDiscount"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0"
+                      value={form.weeklyDiscount}
+                      onChange={handleChange}
+                    />
+                  </label>
+
+                  <label className="field-label">
+                    Cleaning Fee ($)
+                    <input
+                      name="cleaningFee"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0"
+                      value={form.cleaningFee}
+                      onChange={handleChange}
+                    />
+                  </label>
+                </div>
+
+                <div className="field-row">
+                  <label className="field-label">
+                    Service Fee ($)
+                    <input
+                      name="serviceFee"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0"
+                      value={form.serviceFee}
+                      onChange={handleChange}
+                    />
+                  </label>
+
+                  <label className="field-label">
+                    Occupancy Taxes &amp; Fees ($)
+                    <input
+                      name="occupancyTaxes"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0"
+                      value={form.occupancyTaxes}
+                      onChange={handleChange}
+                    />
+                  </label>
+                </div>
+              </div>
             </div>
 
             <div className="edit-right">
               <div className="field-row">
                 <label className="field-label">
-                  Price ($)
+                  Price
                   <input
                     name="price"
                     type="number"
                     min="0"
+                    placeholder="400"
                     value={form.price}
                     onChange={handleChange}
                     required
@@ -348,14 +430,11 @@ const EditListing = () => {
                     required
                   >
                     <option value="">Select an option</option>
-                    {PROPERTY_TYPES.map((propertyType) => (
-                      <option key={propertyType} value={propertyType}>
-                        {propertyType}
+                    {PROPERTY_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
                       </option>
                     ))}
-                    {!PROPERTY_TYPES.includes(form.type) && form.type && (
-                      <option value={form.type}>{form.type}</option>
-                    )}
                   </select>
                 </label>
               </div>
@@ -398,63 +477,7 @@ const EditListing = () => {
                 </label>
               </div>
 
-              <div className="fees-section">
-                <span className="field-label">Fees &amp; discounts</span>
-                <div className="field-row">
-                  <label className="field-label">
-                    Weekly Discount ($)
-                    <input
-                      name="weeklyDiscount"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={form.weeklyDiscount}
-                      onChange={handleChange}
-                    />
-                  </label>
-
-                  <label className="field-label">
-                    Cleaning Fee ($)
-                    <input
-                      name="cleaningFee"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={form.cleaningFee}
-                      onChange={handleChange}
-                    />
-                  </label>
-                </div>
-
-                <div className="field-row">
-                  <label className="field-label">
-                    Service Fee ($)
-                    <input
-                      name="serviceFee"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={form.serviceFee}
-                      onChange={handleChange}
-                    />
-                  </label>
-
-                  <label className="field-label">
-                    Occupancy Taxes &amp; Fees ($)
-                    <input
-                      name="occupancyTaxes"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={form.occupancyTaxes}
-                      onChange={handleChange}
-                    />
-                  </label>
-                </div>
-              </div>
-
               <div className="upload-section">
-                <span className="field-label">Images</span>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -495,7 +518,7 @@ const EditListing = () => {
                   ) : (
                     <div className="image-grid">
                       {images.map((img, index) => (
-                        <img key={index} src={img} alt={`Listing ${index + 1}`} />
+                        <img key={index} src={img} alt={`Upload ${index + 1}`} />
                       ))}
                     </div>
                   )}
@@ -537,11 +560,6 @@ const EditListing = () => {
           font-size: 28px;
           margin: 0 0 20px;
           text-align: left;
-        }
-
-        .edit-loading {
-          text-align: center;
-          padding: 40px;
         }
 
         .edit-form {
@@ -605,6 +623,7 @@ const EditListing = () => {
           display: flex;
           flex-direction: column;
           gap: 0.75rem;
+          margin-top: 0.25rem;
         }
 
         .checkbox-label {
@@ -623,30 +642,29 @@ const EditListing = () => {
           accent-color: #222;
         }
 
-        .amenities-section,
-        .fees-section,
-        .upload-section {
+        .amenities-section {
           display: flex;
           flex-direction: column;
           gap: 0.75rem;
         }
 
-        .amenity-input-row,
-        .image-url-row {
+        .fees-section {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .fees-section > .field-label:first-child {
+          margin-bottom: 0;
+        }
+
+        .amenity-input-row {
           display: flex;
           gap: 0.75rem;
         }
 
-        .amenity-input-row input,
-        .image-url-row input {
+        .amenity-input-row input {
           flex: 1;
-        }
-
-        .image-url-row input {
-          padding: 0.65rem 0.75rem;
-          border: 1px solid #222;
-          border-radius: 4px;
-          font-size: 0.95rem;
         }
 
         .add-btn,
@@ -683,6 +701,25 @@ const EditListing = () => {
           background: #fafafa;
           font-size: 0.92rem;
           color: #333;
+        }
+
+        .upload-section {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .image-url-row {
+          display: flex;
+          gap: 0.75rem;
+        }
+
+        .image-url-row input {
+          flex: 1;
+          padding: 0.65rem 0.75rem;
+          border: 1px solid #222;
+          border-radius: 4px;
+          font-size: 0.95rem;
         }
 
         .upload-preview {
@@ -730,6 +767,7 @@ const EditListing = () => {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 1.5rem;
+          margin-top: 0.5rem;
           padding-bottom: 3rem;
         }
 

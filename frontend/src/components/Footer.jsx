@@ -51,13 +51,13 @@ const Footer = () => {
     <footer className="footer-container">
       <div className="footer-content">
         <div className="footer-columns">
-          {footerLinks.map((column, index) => (
-            <div key={index} className="footer-column">
+          {footerLinks.map((column) => (
+            <div key={column.title} className="footer-column">
               <h3>{column.title}</h3>
               <ul>
-                {column.links.map((link, linkIndex) => (
-                  <li key={linkIndex}>
-                    <button type="button" className="footer-link">
+                {column.links.map((link) => (
+                  <li key={link}>
+                    <button type="button" className="footer-link-btn">
                       {link}
                     </button>
                   </li>
@@ -70,13 +70,13 @@ const Footer = () => {
         <div className="footer-bottom">
           <div className="footer-legal">
             <span>© {currentYear} Airbnb, Inc.</span>
-            <button type="button" className="footer-link">
+            <button type="button" className="footer-link-btn">
               Privacy
             </button>
-            <button type="button" className="footer-link">
+            <button type="button" className="footer-link-btn">
               Terms
             </button>
-            <button type="button" className="footer-link">
+            <button type="button" className="footer-link-btn">
               Sitemap
             </button>
           </div>
@@ -88,25 +88,22 @@ const Footer = () => {
                 href="https://facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Facebook"
               >
-                <FaFacebookF aria-hidden="true" />
+                <FaFacebookF />
               </a>
               <a
                 href="https://twitter.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Twitter"
               >
-                <FaTwitter aria-hidden="true" />
+                <FaTwitter />
               </a>
               <a
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Instagram"
               >
-                <FaInstagram aria-hidden="true" />
+                <FaInstagram />
               </a>
             </div>
           </div>
@@ -150,25 +147,24 @@ const Footer = () => {
           margin-bottom: 12px;
         }
 
-        .footer-column a,
-        .footer-link {
+        .footer-link-btn {
+          background: none;
+          border: none;
+          padding: 0;
+          margin: 0;
+          font: inherit;
+          cursor: pointer;
+          text-align: left;
+        }
+
+        .footer-column .footer-link-btn {
           color: #717171;
           text-decoration: none;
           font-size: 14px;
           transition: color 0.2s;
         }
 
-        .footer-link {
-          background: none;
-          border: none;
-          padding: 0;
-          cursor: pointer;
-          text-align: left;
-          font-family: inherit;
-        }
-
-        .footer-column a:hover,
-        .footer-link:hover {
+        .footer-column .footer-link-btn:hover {
           color: #222222;
           text-decoration: underline;
         }
@@ -188,19 +184,16 @@ const Footer = () => {
         }
 
         .footer-legal span,
-        .footer-legal a,
-        .footer-legal .footer-link {
+        .footer-legal .footer-link-btn {
           font-size: 14px;
           color: #717171;
         }
 
-        .footer-legal a,
-        .footer-legal .footer-link {
+        .footer-legal .footer-link-btn {
           text-decoration: none;
         }
 
-        .footer-legal a:hover,
-        .footer-legal .footer-link:hover {
+        .footer-legal .footer-link-btn:hover {
           text-decoration: underline;
         }
 

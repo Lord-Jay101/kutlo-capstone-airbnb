@@ -30,13 +30,19 @@ const CreateListing = () => {
     enhancedCleaning: false,
     selfCheckIn: false,
     bedroomImage: "",
+    weeklyDiscount: 0,
+    cleaningFee: 0,
+    serviceFee: 0,
+    occupancyTaxes: 0,
   });
 
   const [locations, setLocations] = useState([]);
   const [amenities, setAmenities] = useState([]);
   const [amenityInput, setAmenityInput] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [images, setImages] = useState([]);
   const [message, setMessage] = useState("");
+  const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -81,10 +87,30 @@ const CreateListing = () => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
+    const maxSize = 5 * 1024 * 1024;
+
     files.forEach((file) => {
+      if (!file.type.startsWith("image/")) {
+        setMessage("Please upload image files only.");
+        setIsError(true);
+        return;
+      }
+
+      if (file.size > maxSize) {
+        setMessage("Each image must be 5MB or smaller.");
+        setIsError(true);
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = () => {
         setImages((prev) => [...prev, reader.result]);
+        setMessage("");
+        setIsError(false);
+      };
+      reader.onerror = () => {
+        setMessage("Failed to read image file.");
+        setIsError(true);
       };
       reader.readAsDataURL(file);
     });
@@ -92,10 +118,20 @@ const CreateListing = () => {
     e.target.value = "";
   };
 
+  const handleAddImageUrl = () => {
+    const url = imageUrl.trim();
+    if (!url) return;
+    setImages((prev) => [...prev, url]);
+    setImageUrl("");
+    setMessage("");
+    setIsError(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
+    setIsError(false);
 
     try {
       const payload = {
@@ -112,24 +148,35 @@ const CreateListing = () => {
         bedroomImage: form.bedroomImage || images[0] || "",
         enhancedCleaning: form.enhancedCleaning,
         selfCheckIn: form.selfCheckIn,
-        weeklyDiscount: 0,
-        cleaningFee: 0,
-        serviceFee: 0,
-        occupancyTaxes: 0,
+        weeklyDiscount: Number(form.weeklyDiscount) || 0,
+        cleaningFee: Number(form.cleaningFee) || 0,
+        serviceFee: Number(form.serviceFee) || 0,
+        occupancyTaxes: Number(form.occupancyTaxes) || 0,
       };
 
       await api.post("/accommodations", payload);
 
       setMessage("Listing created successfully!");
+      setIsError(false);
 
       setTimeout(() => {
         navigate("/dashboard");
       }, 1200);
     } catch (err) {
       console.error(err);
-      setMessage(
-        err.response?.data?.message || "Failed to create listing"
-      );
+      const status = err.response?.status;
+      let errorMessage =
+        err.response?.data?.message || "Failed to create listing";
+
+      if (status === 401) {
+        errorMessage = "Please log in as a host to create a listing.";
+      } else if (status === 413) {
+        errorMessage =
+          "Images are too large. Use smaller photos or paste image URLs instead.";
+      }
+
+      setMessage(errorMessage);
+      setIsError(true);
     } finally {
       setLoading(false);
     }
@@ -233,6 +280,65 @@ const CreateListing = () => {
                   </ul>
                 )}
               </div>
+
+              <div className="fees-section">
+                <span className="field-label">Fees &amp; discounts</span>
+                <div className="field-row">
+                  <label className="field-label">
+                    Weekly Discount ($)
+                    <input
+                      name="weeklyDiscount"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0"
+                      value={form.weeklyDiscount}
+                      onChange={handleChange}
+                    />
+                  </label>
+
+                  <label className="field-label">
+                    Cleaning Fee ($)
+                    <input
+                      name="cleaningFee"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0"
+                      value={form.cleaningFee}
+                      onChange={handleChange}
+                    />
+                  </label>
+                </div>
+
+                <div className="field-row">
+                  <label className="field-label">
+                    Service Fee ($)
+                    <input
+                      name="serviceFee"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0"
+                      value={form.serviceFee}
+                      onChange={handleChange}
+                    />
+                  </label>
+
+                  <label className="field-label">
+                    Occupancy Taxes &amp; Fees ($)
+                    <input
+                      name="occupancyTaxes"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0"
+                      value={form.occupancyTaxes}
+                      onChange={handleChange}
+                    />
+                  </label>
+                </div>
+              </div>
             </div>
 
             <div className="create-right">
@@ -323,6 +429,24 @@ const CreateListing = () => {
                   Upload Images
                 </button>
 
+                <div className="image-url-row">
+                  <input
+                    type="url"
+                    placeholder="Or paste image URL"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddImageUrl();
+                      }
+                    }}
+                  />
+                  <button type="button" className="add-btn" onClick={handleAddImageUrl}>
+                    Add URL
+                  </button>
+                </div>
+
                 <div className="upload-preview">
                   {images.length === 0 ? (
                     <p>No images uploaded</p>
@@ -338,7 +462,11 @@ const CreateListing = () => {
             </div>
           </div>
 
-          {message && <p className="form-message">{message}</p>}
+          {message && (
+            <p className={`form-message ${isError ? "form-message--error" : ""}`}>
+              {message}
+            </p>
+          )}
 
           <div className="form-actions">
             <button type="submit" className="update-btn" disabled={loading}>
@@ -359,16 +487,14 @@ const CreateListing = () => {
         .create-page {
           max-width: 1100px;
           margin: 0 auto;
-          padding: 1rem var(--page-padding-x) 3rem;
+          padding: 5px var(--page-padding-x) 2rem;
           background: #fff;
         }
 
         .create-title {
-          text-align: center;
-          font-size: 1.75rem;
-          font-weight: 700;
-          margin-bottom: 2rem;
-          color: #222;
+          font-size: 28px;
+          margin: 0 0 20px;
+          text-align: left;
         }
 
         .create-form {
@@ -457,6 +583,16 @@ const CreateListing = () => {
           gap: 0.75rem;
         }
 
+        .fees-section {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .fees-section > .field-label:first-child {
+          margin-bottom: 0;
+        }
+
         .amenity-input-row {
           display: flex;
           gap: 0.75rem;
@@ -508,6 +644,19 @@ const CreateListing = () => {
           gap: 0.75rem;
         }
 
+        .image-url-row {
+          display: flex;
+          gap: 0.75rem;
+        }
+
+        .image-url-row input {
+          flex: 1;
+          padding: 0.65rem 0.75rem;
+          border: 1px solid #222;
+          border-radius: 4px;
+          font-size: 0.95rem;
+        }
+
         .upload-preview {
           min-height: 220px;
           border: 1px solid #222;
@@ -545,11 +694,16 @@ const CreateListing = () => {
           font-weight: 500;
         }
 
+        .form-message--error {
+          color: #dc2626;
+        }
+
         .form-actions {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 1.5rem;
           margin-top: 0.5rem;
+          padding-bottom: 3rem;
         }
 
         .update-btn,
